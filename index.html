@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduFlow AI - Interactive Learning Companion</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    .perspective { perspective: 1000px; }
+    .transform-style-3d { transform-style: preserve-3d; }
+    .backface-hidden { backface-visibility: hidden; }
+    .rotate-y-180 { transform: rotateY(180deg); }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
+
+  <!-- Header / Navigation -->
+  <header class="border-b border-slate-800 bg-slate-950/50 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="bg-indigo-600 p-2 rounded-lg">
+          <i class="fa-solid fa-graduation-cap text-xl text-white"></i>
+        </div>
+        <span class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">EduFlow AI</span>
+      </div>
+      <div class="flex space-x-2">
+        <button id="tab-flashcards" onclick="switchTab('flashcards')" class="px-4 py-2 rounded-lg text-sm font-medium transition bg-indigo-600 text-white">
+          <i class="fa-solid fa-clone mr-2"></i>Flashcards
+        </button>
+        <button id="tab-quiz" onclick="switchTab('quiz')" class="px-4 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white hover:bg-slate-800">
+          <i class="fa-solid fa-pen-to-square mr-2"></i>Quiz Mode
+        </button>
+        <button id="tab-guide" onclick="switchTab('guide')" class="px-4 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white hover:bg-slate-800">
+          <i class="fa-solid fa-book-open mr-2"></i>Revision Guide
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 max-w-5xl w-full mx-auto p-4 md:p-6 flex flex-col gap-6">
+
+    <!-- Topic Input / Generator Bar -->
+    <section class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4 shadow-xl">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+          <i class="fa-solid fa-wand-magic-sparkles absolute left-3 top-3.5 text-indigo-400"></i>
+          <input type="text" id="topic-input" placeholder="Enter engineering topic (e.g., A* Search Algorithm, Data Structures, Quantum Qubits)..." 
+                 class="w-full bg-slate-900 border border-slate-700 rounded-lg pl-10 pr-4 py-2.5 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition">
+        </div>
+        <button onclick="generateContent()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-6 py-2.5 rounded-lg transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30">
+          <span>Generate Study Hub</span>
+          <i class="fa-solid fa-arrow-right text-sm"></i>
+        </button>
+      </div>
+      <!-- Preset Badges -->
+      <div class="flex items-center gap-2 mt-3 text-xs text-slate-400 overflow-x-auto pb-1">
+        <span class="font-semibold text-slate-500">Quick Topics:</span>
+        <button onclick="setTopic('A* Search Algorithm')" class="bg-slate-700/50 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full transition border border-slate-600">A* Search</button>
+        <button onclick="setTopic('Data Structures & Algorithms')" class="bg-slate-700/50 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full transition border border-slate-600">Data Structures</button>
+        <button onclick="setTopic('Machine Learning - KNN')" class="bg-slate-700/50 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full transition border border-slate-600">KNN Classification</button>
+      </div>
+    </section>
+
+    <!-- SECTION 1: FLASHCARDS VIEW -->
+    <section id="view-flashcards" class="flex flex-col items-center justify-center gap-6 my-auto min-h-[380px]">
+      <div class="perspective w-full max-w-xl h-64 cursor-pointer" onclick="flipCard()">
+        <div id="flashcard-inner" class="relative w-full h-full duration-500 transform-style-3d">
+          <!-- Card Front -->
+          <div class="absolute w-full h-full backface-hidden bg-gradient-to-br from-slate-800 to-slate-900 border border-indigo-500/30 rounded-2xl p-6 flex flex-col justify-between shadow-2xl">
+            <div class="flex justify-between items-center text-xs text-indigo-400 font-semibold tracking-wider uppercase">
+              <span>Flashcard Question</span>
+              <span id="card-counter">1 / 3</span>
+            </div>
+            <div class="text-center px-4">
+              <p id="card-question" class="text-xl md:text-2xl font-medium text-slate-100">What is the core heuristic evaluation function used in the A* Search Algorithm?</p>
+            </div>
+            <div class="text-center text-xs text-slate-500">
+              <i class="fa-solid fa-rotate mr-1"></i> Click card to reveal answer
+            </div>
+          </div>
+          <!-- Card Back -->
+          <div class="absolute w-full h-full backface-hidden rotate-y-180 bg-gradient-to-br from-indigo-950 to-slate-900 border border-cyan-500/30 rounded-2xl p-6 flex flex-col justify-between shadow-2xl">
+            <div class="flex justify-between items-center text-xs text-cyan-400 font-semibold tracking-wider uppercase">
+              <span>Answer Explanation</span>
+              <i class="fa-solid fa-lightbulb"></i>
+            </div>
+            <div class="text-center px-4 overflow-y-auto max-h-36">
+              <p id="card-answer" class="text-base md:text-lg text-slate-200">f(n) = g(n) + h(n), where g(n) is the exact cost from the start node to node n, and h(n) is the estimated cost from node n to the goal.</p>
+            </div>
+            <div class="text-center text-xs text-slate-500">
+              <i class="fa-solid fa-rotate mr-1"></i> Click card to flip back
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex items-center gap-4">
+        <button onclick="prevCard()" class="p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-full text-slate-300 transition">
+          <i class="fa-solid fa-chevron-left w-5 h-5 flex items-center justify-center"></i>
+        </button>
+        <button onclick="flipCard()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-sm text-slate-300 font-medium transition">
+          Flip Card
+        </button>
+        <button onclick="nextCard()" class="p-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-full text-slate-300 transition">
+          <i class="fa-solid fa-chevron-right w-5 h-5 flex items-center justify-center"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- SECTION 2: QUIZ MODE VIEW -->
+    <section id="view-quiz" class="hidden flex flex-col gap-6">
+      <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6 shadow-xl">
+        <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700/60">
+          <h2 class="text-lg font-semibold text-indigo-400">Knowledge Check Quiz</h2>
+          <span id="quiz-score-badge" class="bg-indigo-950 border border-indigo-500/30 text-indigo-300 text-xs px-3 py-1 rounded-full font-medium">Score: 0 / 3</span>
+        </div>
+        <div id="quiz-container" class="space-y-6">
+          <!-- Quiz items injected here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: REVISION GUIDE VIEW -->
+    <section id="view-guide" class="hidden flex flex-col gap-6">
+      <div class="bg-slate-800/40 border border-slate-700/60 rounded-xl p-6 shadow-xl">
+        <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700/60">
+          <h2 class="text-lg font-semibold text-cyan-400">Structured Revision Guide</h2>
+          <button onclick="window.print()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800 px-3 py-1.5 rounded border border-slate-700 transition">
+            <i class="fa-solid fa-print"></i> Export / Print
+          </button>
+        </div>
+        <div id="guide-content" class="prose prose-invert max-w-none text-slate-300 leading-relaxed space-y-4">
+          <!-- Guide content injected here -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Interactive State Logic -->
+  <script>
+    // Knowledge Base Data Store
+    const database = {
+      "A* Search Algorithm": {
+        flashcards: [
+          { q: "What is the core heuristic evaluation function used in the A* Search Algorithm?", a: "f(n) = g(n) + h(n), where g(n) is the path cost from the start node to node n, and h(n) is the estimated cost from node n to the goal." },
+          { q: "What condition must a heuristic function h(n) satisfy to guarantee that A* finds an optimal path?", a: "The heuristic must be admissible, meaning it never overestimates the true cost to reach the goal." },
+          { q: "How does A* differ from Dijkstra's Algorithm?", a: "A* uses a heuristic function h(n) to guide its search toward the goal, whereas Dijkstra's algorithm only considers path cost g(n) from the start node." }
+        ],
+        quiz: [
+          { q: "What does h(n) represent in A* search?", options: ["Actual cost from start to n", "Heuristic estimate to goal", "Total evaluation cost", "Edge weight between nodes"], correct: 1 },
+          { q: "A heuristic is called 'admissible' if it:", options: ["Overestimates the actual cost", "Never overestimates the actual cost", "Is equal to g(n)", "Ignores the goal node"], correct: 1 },
+          { q: "If h(n) = 0 for all nodes, A* reduces to:", options: ["Greedy Best-First Search", "Depth-First Search", "Dijkstra's Algorithm", "Uniform Cost Search"], correct: 2 }
+        ],
+        guide: `
+          <h3 class="text-xl font-bold text-slate-100">A* Search Algorithm Overview</h3>
+          <p>The <strong>A* Search Algorithm</strong> is one of the most widely used pathfinding and graph-traversal algorithms in computer science due to its completeness, optimality, and efficiency.</p>
+          <h4 class="text-lg font-semibold text-indigo-400 mt-4">Key Formula</h4>
+          <div class="bg-slate-900 p-3 rounded-lg border border-slate-700 font-mono text-cyan-300 my-2">f(n) = g(n) + h(n)</div>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>g(n):</strong> The exact path cost from the start node to node <i>n</i>.</li>
+            <li><strong>h(n):</strong> Estimated cost from node <i>n</i> to the goal (Heuristic).</li>
+          </ul>
+        `
+      },
+      "Data Structures & Algorithms": {
+        flashcards: [
+          { q: "What is the average time complexity of searching in a Hash Table?", a: "O(1) on average for lookup, insertion, and deletion." },
+          { q: "What key property defines a Binary Search Tree (BST)?", a: "For any node, all keys in the left subtree are smaller, and all keys in the right subtree are larger." },
+          { q: "What is the worst-case time complexity of QuickSort?", a: "O(n²), which occurs when the pivot selection consistently produces unbalanced partitions." }
+        ],
+        quiz: [
+          { q: "Which data structure follows LIFO (Last In, First Out)?", options: ["Queue", "Stack", "Array", "Linked List"], correct: 1 },
+          { q: "What is the worst-case search time in a balanced Binary Search Tree?", options: ["O(1)", "O(n)", "O(log n)", "O(n²)"], correct: 2 }
+        ],
+        guide: `
+          <h3 class="text-xl font-bold text-slate-100">Data Structures Summary</h3>
+          <p>Data structures organize and store data for efficient access and modification. Choosing the right structure depends on required operations like insertion, deletion, and lookup.</p>
+        `
+      }
+    };
+
+    let currentTopic = "A* Search Algorithm";
+    let cardIndex = 0;
+    let isFlipped = false;
+    let quizAnswers = {};
+
+    function setTopic(topic) {
+      document.getElementById('topic-input').value = topic;
+      generateContent();
+    }
+
+    function generateContent() {
+      const input = document.getElementById('topic-input').value.trim();
+      if (input && database[input]) {
+        currentTopic = input;
+      } else if (input) {
+        // Fallback generator for custom inputs
+        currentTopic = input;
+        database[input] = {
+          flashcards: [
+            { q: `What is the primary objective of ${input}?`, a: `${input} focuses on solving specific computational and analytical problems efficiently.` },
+            { q: `What is a critical constraint when implementing ${input}?`, a: `Resource optimization, computational complexity, and edge-case handling.` }
+          ],
+          quiz: [
+            { q: `Which domain does ${input} primarily belong to?`, options: ["Engineering & Computer Science", "Humanities", "Art History", "Botany"], correct: 0 }
+          ],
+          guide: `<h3 class="text-xl font-bold text-slate-100">${input} Overview</h3><p>Custom generated summary for <strong>${input}</strong>.</p>`
+        };
+      }
+      cardIndex = 0;
+      isFlipped = false;
+      renderAll();
+    }
+
+    function renderAll() {
+      renderFlashcards();
+      renderQuiz();
+      renderGuide();
+    }
+
+    // Flashcard Handlers
+    function renderFlashcards() {
+      const data = database[currentTopic].flashcards;
+      const inner = document.getElementById('flashcard-inner');
+      if (isFlipped) {
+        inner.classList.remove('rotate-y-180');
+        isFlipped = false;
+      }
+      setTimeout(() => {
+        document.getElementById('card-question').innerText = data[cardIndex].q;
+        document.getElementById('card-answer').innerText = data[cardIndex].a;
+        document.getElementById('card-counter').innerText = `${cardIndex + 1} / ${data.length}`;
+      }, isFlipped ? 200 : 0);
+    }
+
+    function flipCard() {
+      const inner = document.getElementById('flashcard-inner');
+      isFlipped = !isFlipped;
+      if (isFlipped) inner.classList.add('rotate-y-180');
+      else inner.classList.remove('rotate-y-180');
+    }
+
+    function nextCard() {
+      const data = database[currentTopic].flashcards;
+      cardIndex = (cardIndex + 1) % data.length;
+      renderFlashcards();
+    }
+
+    function prevCard() {
+      const data = database[currentTopic].flashcards;
+      cardIndex = (cardIndex - 1 + data.length) % data.length;
+      renderFlashcards();
+    }
+
+    // Quiz Handlers
+    function renderQuiz() {
+      const quizData = database[currentTopic].quiz;
+      const container = document.getElementById('quiz-container');
+      container.innerHTML = quizData.map((item, idx) => `
+        <div class="bg-slate-900 border border-slate-700/60 p-4 rounded-lg">
+          <p class="font-medium text-slate-200 mb-3">${idx + 1}. ${item.q}</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            ${item.options.map((opt, oIdx) => `
+              <button onclick="selectAnswer(${idx},${oIdx})" id="q-${idx}-opt-${oIdx}" 
+                      class="text-left px-3 py-2 rounded bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 border border-slate-700 transition">
+                ${opt}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+      quizAnswers = {};
+      updateQuizScore();
+    }
+
+    function selectAnswer(qIdx, optionIdx) {
+      const quizData = database[currentTopic].quiz;
+      quizAnswers[qIdx] = optionIdx;
+      
+      quizData[qIdx].options.forEach((_, oIdx) => {
+        const btn = document.getElementById(`q-${qIdx}-opt-${oIdx}`);
+        btn.className = "text-left px-3 py-2 rounded text-sm border transition ";
+        if (oIdx === quizData[qIdx].correct) {
+          btn.className += "bg-emerald-950 border-emerald-500 text-emerald-200";
+        } else if (oIdx === optionIdx) {
+          btn.className += "bg-rose-950 border-rose-500 text-rose-200";
+        } else {
+          btn.className += "bg-slate-800 border-slate-700 text-slate-500 opacity-50";
+        }
+      });
+      updateQuizScore();
+    }
+
+    function updateQuizScore() {
+      const quizData = database[currentTopic].quiz;
+      let score = 0;
+      Object.keys(quizAnswers).forEach(qIdx => {
+        if (quizAnswers[qIdx] === quizData[qIdx].correct) score++;
+      });
+      document.getElementById('quiz-score-badge').innerText = `Score: ${score} / ${quizData.length}`;
+    }
+
+    // Guide Handlers
+    function renderGuide() {
+      document.getElementById('guide-content').innerHTML = database[currentTopic].guide;
+    }
+
+    // Tab Navigation
+    function switchTab(tab) {
+      ['flashcards', 'quiz', 'guide'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.add('hidden');
+        document.getElementById(`tab-${t}`).className = "px-4 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white hover:bg-slate-800";
+      });
+      document.getElementById(`view-${tab}`).classList.remove('hidden');
+      document.getElementById(`tab-${tab}`).className = "px-4 py-2 rounded-lg text-sm font-medium transition bg-indigo-600 text-white";
+    }
+
+    // Initial render on load
+    renderAll();
+  </script>
+</body>
+</html>
